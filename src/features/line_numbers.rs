@@ -81,17 +81,20 @@ pub fn format_and_paint_line_numbers<'a>(
             *m_ref += 1;
             ((Some(m), None), (minus_style, plus_style))
         }
+        State::HunkMinusWrapped => ((None, None), (minus_style, plus_style)),
         State::HunkZero => {
             let (m, p) = (*m_ref, *p_ref);
             *m_ref += 1;
             *p_ref += 1;
             ((Some(m), Some(p)), (zero_style, zero_style))
         }
+        State::HunkZeroWrapped => ((None, None), (zero_style, zero_style)),
         State::HunkPlus(_) => {
             let p = *p_ref;
             *p_ref += 1;
             ((None, Some(p)), (minus_style, plus_style))
         }
+        State::HunkPlusWrapped => ((None, None), (minus_style, plus_style)),
         _ => return Vec::new(),
     };
 
@@ -153,7 +156,7 @@ lazy_static! {
     .unwrap();
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct LineNumbersData<'a> {
     pub left_format_data: LineNumberFormatData<'a>,
     pub right_format_data: LineNumberFormatData<'a>,

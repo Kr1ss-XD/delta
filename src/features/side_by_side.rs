@@ -6,6 +6,7 @@ use crate::cli;
 use crate::config::Config;
 use crate::delta::State;
 use crate::features::line_numbers;
+use crate::features::wrap;
 use crate::features::OptionValueFunction;
 use crate::paint::Painter;
 use crate::style::Style;
@@ -35,6 +36,7 @@ pub struct SideBySideData {
     pub right_panel: Panel,
 }
 
+#[derive(Debug)]
 pub struct Panel {
     pub width: usize,
     pub offset: usize,
@@ -61,13 +63,13 @@ impl SideBySideData {
 
 /// Emit a sequence of minus and plus lines in side-by-side mode.
 #[allow(clippy::too_many_arguments)]
-pub fn paint_minus_and_plus_lines_side_by_side<'a>(
+pub fn paint_minus_and_plus_lines_side_by_side(
     minus_syntax_style_sections: Vec<Vec<(SyntectStyle, &str)>>,
     minus_diff_style_sections: Vec<Vec<(Style, &str)>>,
-    minus_states: Vec<&'a State>,
+    minus_states: Vec<State>,
     plus_syntax_style_sections: Vec<Vec<(SyntectStyle, &str)>>,
     plus_diff_style_sections: Vec<Vec<(Style, &str)>>,
-    plus_states: Vec<&'a State>,
+    plus_states: Vec<State>,
     line_alignment: Vec<(Option<usize>, Option<usize>)>,
     output_buffer: &mut String,
     config: &Config,
@@ -80,7 +82,7 @@ pub fn paint_minus_and_plus_lines_side_by_side<'a>(
             &minus_syntax_style_sections,
             &minus_diff_style_sections,
             match minus_line_index {
-                Some(i) => minus_states[i],
+                Some(i) => &minus_states[i],
                 None => &State::HunkMinus(None),
             },
             line_numbers_data,
@@ -92,7 +94,7 @@ pub fn paint_minus_and_plus_lines_side_by_side<'a>(
             &plus_syntax_style_sections,
             &plus_diff_style_sections,
             match plus_line_index {
-                Some(i) => plus_states[i],
+                Some(i) => &plus_states[i],
                 None => &State::HunkPlus(None),
             },
             line_numbers_data,
@@ -113,16 +115,29 @@ pub fn paint_zero_lines_side_by_side(
     painted_prefix: Option<ansi_term::ANSIString>,
     background_color_extends_to_terminal_width: Option<bool>,
 ) {
-    let state = State::HunkZero;
+    let states = vec![State::HunkZero];
 
-    for (line_index, (syntax_sections, diff_sections)) in syntax_style_sections
-        .iter()
+    let (states, syntax_style_sections, diff_style_sections) = if config.side_by_side_wrapped {
+        wrap::wrap_zero_block(
+            &config,
+            states,
+            syntax_style_sections,
+            diff_style_sections,
+            &line_numbers_data,
+        )
+    } else {
+        (states, syntax_style_sections, diff_style_sections)
+    };
+
+    for (line_index, ((syntax_sections, diff_sections), state)) in syntax_style_sections
+        .into_iter()
         .zip_eq(diff_style_sections.iter())
+        .zip_eq(states.into_iter())
         .enumerate()
     {
         for panel_side in &[PanelSide::Left, PanelSide::Right] {
             let (mut panel_line, panel_line_is_empty) = Painter::paint_line(
-                syntax_sections,
+                &syntax_sections,
                 diff_sections,
                 &state,
                 line_numbers_data,
@@ -142,7 +157,7 @@ pub fn paint_zero_lines_side_by_side(
             );
             output_buffer.push_str(&panel_line);
 
-            if panel_side == &PanelSide::Left {
+            if panel_side == &PanelSide::Left && state != State::HunkZeroWrapped {
                 // TODO: Avoid doing the superimpose_style_sections work twice.
                 // HACK: These are getting incremented twice, so knock them back down once.
                 if let Some(d) = line_numbers_data.as_mut() {
@@ -303,9 +318,12 @@ fn paint_minus_or_plus_panel_line(
             )
         };
 
-    let painted_prefix = match (config.keep_plus_minus_markers, panel_side) {
-        (true, PanelSide::Left) => Some(config.minus_style.paint("-")),
-        (true, PanelSide::Right) => Some(config.plus_style.paint("+")),
+    let painted_prefix = match (config.keep_plus_minus_markers, panel_side, state) {
+        (true, _, State::HunkPlusWrapped) | (true, _, State::HunkMinusWrapped) => {
+            Some(config.plus_style.paint(" "))
+        }
+        (true, PanelSide::Left, _) => Some(config.minus_style.paint("-")),
+        (true, PanelSide::Right, _) => Some(config.plus_style.paint("+")),
         _ => None,
     };
 

@@ -170,6 +170,7 @@ pub fn set_options(
             plus_non_emph_style,
             raw,
             side_by_side,
+            side_by_side_wrapped,
             tab_width,
             tokenization_regex,
             true_color,
@@ -335,6 +336,14 @@ fn gather_features(
     }
     if opt.side_by_side {
         gather_builtin_features_recursively("side-by-side", &mut features, &builtin_features, opt);
+    }
+    if opt.side_by_side_wrapped {
+        gather_builtin_features_recursively(
+            "side-by-side-wrapped",
+            &mut features,
+            &builtin_features,
+            opt,
+        );
     }
 
     if let Some(git_config) = git_config {
