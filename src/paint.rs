@@ -213,7 +213,6 @@ impl<'a> Painter<'a> {
             side_by_side::paint_zero_lines_side_by_side(
                 syntax_style_sections,
                 vec![diff_style_sections],
-                &State::HunkZero,
                 &mut self.output_buffer,
                 self.config,
                 &mut Some(&mut self.line_numbers_data),
