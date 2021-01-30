@@ -84,11 +84,6 @@ pub fn paint_minus_and_plus_lines_side_by_side<'a>(
                 None => &State::HunkMinus(None),
             },
             line_numbers_data,
-            if config.keep_plus_minus_markers {
-                Some(config.minus_style.paint("-"))
-            } else {
-                None
-            },
             background_color_extends_to_terminal_width,
             config,
         ));
@@ -101,11 +96,6 @@ pub fn paint_minus_and_plus_lines_side_by_side<'a>(
                 None => &State::HunkPlus(None),
             },
             line_numbers_data,
-            if config.keep_plus_minus_markers {
-                Some(config.plus_style.paint("+"))
-            } else {
-                None
-            },
             background_color_extends_to_terminal_width,
             config,
         ));
@@ -172,7 +162,6 @@ fn paint_left_panel_minus_line<'a>(
     diff_style_sections: &[Vec<(Style, &str)>],
     state: &'a State,
     line_numbers_data: &mut Option<&mut line_numbers::LineNumbersData>,
-    painted_prefix: Option<ansi_term::ANSIString>,
     background_color_extends_to_terminal_width: Option<bool>,
     config: &Config,
 ) -> String {
@@ -183,7 +172,6 @@ fn paint_left_panel_minus_line<'a>(
         state,
         line_numbers_data,
         PanelSide::Left,
-        painted_prefix,
         config,
     );
     pad_panel_line_to_width(
@@ -207,7 +195,6 @@ fn paint_right_panel_plus_line<'a>(
     diff_style_sections: &[Vec<(Style, &str)>],
     state: &'a State,
     line_numbers_data: &mut Option<&mut line_numbers::LineNumbersData>,
-    painted_prefix: Option<ansi_term::ANSIString>,
     background_color_extends_to_terminal_width: Option<bool>,
     config: &Config,
 ) -> String {
@@ -218,7 +205,6 @@ fn paint_right_panel_plus_line<'a>(
         state,
         line_numbers_data,
         PanelSide::Right,
-        painted_prefix,
         config,
     );
 
@@ -293,7 +279,6 @@ fn paint_minus_or_plus_panel_line(
     state: &State,
     line_numbers_data: &mut Option<&mut line_numbers::LineNumbersData>,
     panel_side: PanelSide,
-    painted_prefix: Option<ansi_term::ANSIString>,
     config: &Config,
 ) -> (String, bool) {
     let (empty_line_syntax_sections, empty_line_diff_sections) = (Vec::new(), Vec::new());
@@ -317,6 +302,12 @@ fn paint_minus_or_plus_panel_line(
                 opposite_state,
             )
         };
+
+    let painted_prefix = match (config.keep_plus_minus_markers, panel_side) {
+        (true, PanelSide::Left) => Some(config.minus_style.paint("-")),
+        (true, PanelSide::Right) => Some(config.plus_style.paint("+")),
+        _ => None,
+    };
 
     let (line, line_is_empty) = Painter::paint_line(
         line_syntax_sections,
