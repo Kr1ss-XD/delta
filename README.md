@@ -75,10 +75,10 @@ The most convenient way to configure delta is with a `[delta]` section in `~/.gi
 
 Use `delta --help` to see all the available options.
 
-To change your delta options in a one-off git command, use `git -c ...`. For example
+To change your delta options in a one-off git command, use `git -c`. For example
 
 ```
-git -c delta.line-numbers=false -c delta.max-line-distance=0.8 show
+git -c delta.line-numbers=false show
 ```
 
 Contents
@@ -230,7 +230,7 @@ Alternatively, delta is available in the following package managers:
   <tr>
     <td>Debian / Ubuntu</td>
     <td><br>.deb files are on the <a href="https://github.com/dandavison/delta/releases">releases</a> page and at <a href="https://github.com/barnumbirr/delta-debian/releases">barnumbirr/delta-debian</a><br>
-    <code>dpkg -i file.deb</code></td>
+    <code>dpkg -i file.deb</code>. **IMPORTANT** If you are using Ubuntu <= 19.10 or are mixing apt sources, read https://github.com/dandavison/delta/issues/504, be extremely cautious, and try the versions linked against musl.</td>
   </tr>
   <tr>
     <td>Fedora</td>

@@ -132,11 +132,14 @@ delta is not an appropriate value for $PAGER \
                     p.args(args);
                     p
                 };
-                if config.navigate {
+                if is_less && config.navigate {
                     if let Ok(hist_file) =
                         navigate::copy_less_hist_file_and_append_navigate_regexp(config)
                     {
                         process.env("LESSHISTFILE", hist_file);
+                        if config.show_themes {
+                            process.arg("+n");
+                        }
                     }
                 }
                 Ok(process
