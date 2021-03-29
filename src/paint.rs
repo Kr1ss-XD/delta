@@ -12,6 +12,7 @@ use crate::delta::State;
 use crate::edits;
 use crate::features::line_numbers;
 use crate::features::side_by_side;
+use crate::features::wrap;
 use crate::paint::superimpose_style_sections::superimpose_style_sections;
 use crate::style::Style;
 
@@ -88,6 +89,7 @@ impl<'a> Painter<'a> {
             // in effect in which case we replace it with the appropriate marker).
             // TODO: Things should, but do not, work if this leading space is omitted at this stage.
             // See comment in align::Alignment::new.
+            // Note that a wrapped line also has a leading character added to remain compatible.
             line.next();
             format!(" {}\n", self.expand_tabs(line))
         } else {
@@ -145,13 +147,100 @@ impl<'a> Painter<'a> {
             Self::get_diff_style_sections(&self.minus_lines, &self.plus_lines, self.config);
 
         if self.config.side_by_side {
+            // Only set `wrap_lines` to true if wrapping is wanted and lines which are
+            // too long are found.
+            // If so, remember the calculated line width and which of the lines are too
+            // long for later re-use.
+            let (wrap_lines, line_width, syntax_too_long, diff_too_long) =
+                if self.config.side_by_side_wrapped {
+                    let line_width =
+                        wrap::available_line_width(&self.config, &self.line_numbers_data);
+
+                    let (wrap_syntax, syntax_style_lines_too_long) = wrap::minus_plus_too_long(
+                        &minus_line_syntax_style_sections,
+                        &plus_line_syntax_style_sections,
+                        &line_width,
+                    );
+                    let (wrap_diff, diff_style_lines_too_long) = wrap::minus_plus_too_long(
+                        &minus_line_diff_style_sections,
+                        &plus_line_diff_style_sections,
+                        &line_width,
+                    );
+
+                    (
+                        wrap_syntax || wrap_diff,
+                        line_width,
+                        syntax_style_lines_too_long,
+                        diff_style_lines_too_long,
+                    )
+                } else {
+                    (
+                        false,
+                        wrap::PlusMinus::default(),
+                        wrap::PlusMinus::default(),
+                        wrap::PlusMinus::default(),
+                    )
+                };
+
+            let (line_alignment, line_syntax_style_sections, line_diff_style_sections, line_states) =
+                if !wrap_lines {
+                    (
+                        line_alignment,
+                        wrap::PlusMinus::new(
+                            minus_line_syntax_style_sections,
+                            plus_line_syntax_style_sections,
+                        ),
+                        wrap::PlusMinus::new(
+                            minus_line_diff_style_sections,
+                            plus_line_diff_style_sections,
+                        ),
+                        wrap::PlusMinus::new(
+                            self.minus_lines
+                                .iter()
+                                .map(|(_, state)| state.clone())
+                                .collect(),
+                            self.plus_lines
+                                .iter()
+                                .map(|(_, state)| state.clone())
+                                .collect(),
+                        ),
+                    )
+                } else {
+                    // Calculated for syntect::highlighting::style::Style and delta::Style
+                    let (_, _, wrapped_line_syntax_style_sections) = wrap::wrap_plusminus_block(
+                        &self.config,
+                        minus_line_syntax_style_sections,
+                        plus_line_syntax_style_sections,
+                        &line_alignment,
+                        &line_width,
+                        syntax_too_long,
+                    );
+
+                    let (wrapped_alignment, wrapped_states, wrapped_line_diff_style_sections) =
+                        wrap::wrap_plusminus_block(
+                            &self.config,
+                            minus_line_diff_style_sections,
+                            plus_line_diff_style_sections,
+                            &line_alignment,
+                            &line_width,
+                            diff_too_long,
+                        );
+
+                    (
+                        wrapped_alignment,
+                        wrapped_line_syntax_style_sections,
+                        wrapped_line_diff_style_sections,
+                        wrapped_states,
+                    )
+                };
+
             side_by_side::paint_minus_and_plus_lines_side_by_side(
-                minus_line_syntax_style_sections,
-                minus_line_diff_style_sections,
-                self.minus_lines.iter().map(|(_, state)| state).collect(),
-                plus_line_syntax_style_sections,
-                plus_line_diff_style_sections,
-                self.plus_lines.iter().map(|(_, state)| state).collect(),
+                line_syntax_style_sections.minus,
+                line_diff_style_sections.minus,
+                line_states.minus,
+                line_syntax_style_sections.plus,
+                line_diff_style_sections.plus,
+                line_states.plus,
                 line_alignment,
                 &mut self.output_buffer,
                 self.config,
@@ -218,7 +307,6 @@ impl<'a> Painter<'a> {
             side_by_side::paint_zero_lines_side_by_side(
                 syntax_style_sections,
                 vec![diff_style_sections],
-                &State::HunkZero,
                 &mut self.output_buffer,
                 self.config,
                 &mut Some(&mut self.line_numbers_data),

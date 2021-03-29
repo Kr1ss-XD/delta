@@ -8,6 +8,7 @@ use syntect::highlighting::Style as SyntectStyle;
 use syntect::highlighting::Theme as SyntaxTheme;
 use syntect::parsing::SyntaxSet;
 
+use crate::ansi;
 use crate::bat_utils::output::PagingMode;
 use crate::cli;
 use crate::color;
@@ -72,6 +73,7 @@ pub struct Config {
     pub git_plus_style: Style,
     pub show_themes: bool,
     pub side_by_side: bool,
+    pub side_by_side_wrapped: bool,
     pub side_by_side_data: side_by_side::SideBySideData,
     pub syntax_dummy_theme: SyntaxTheme,
     pub syntax_set: SyntaxSet,
@@ -81,6 +83,8 @@ pub struct Config {
     pub true_color: bool,
     pub truncation_symbol: String,
     pub whitespace_error_style: Style,
+    pub wrap_symbol: String,
+    pub wrap_max_lines: usize,
     pub zero_style: Style,
 }
 
@@ -237,6 +241,7 @@ impl From<cli::Opt> for Config {
             git_plus_style,
             show_themes: opt.show_themes,
             side_by_side: opt.side_by_side,
+            side_by_side_wrapped: opt.side_by_side_wrapped,
             side_by_side_data,
             syntax_dummy_theme: SyntaxTheme::default(),
             syntax_set: opt.computed.syntax_set,
@@ -248,7 +253,16 @@ impl From<cli::Opt> for Config {
             },
             tokenization_regex,
             true_color: opt.computed.true_color,
-            truncation_symbol: "→".to_string(),
+            truncation_symbol: {
+                let sym = "→";
+                if opt.side_by_side_wrapped {
+                    format!("{}{}{}", ansi::ANSI_SGR_REVERSE, sym, ansi::ANSI_SGR_RESET)
+                } else {
+                    sym.to_string()
+                }
+            },
+            wrap_symbol: "↵".to_string(),
+            wrap_max_lines: 5,
             whitespace_error_style,
             zero_style,
         }
