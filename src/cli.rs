@@ -502,6 +502,11 @@ pub struct Opt {
     #[structopt(short = "w", long = "width")]
     pub width: Option<String>,
 
+    /// A string to use to display tab characters with. By default, each tab character will be
+    /// replaced by space characters. (See `tabs`)
+    #[structopt(long = "tab-string")]
+    pub tab_string: Option<String>,
+
     /// Width allocated for file paths in a diff stat section. If a relativized
     /// file path exceeds this width then the diff stat will be misaligned.
     #[structopt(long = "diff-stat-align-width", default_value = "48")]
