@@ -1,23 +1,23 @@
-//! A module for constructing and writing the hunk header.
-//!
-//! The structure of the hunk header output by delta is
-//! ```
-//! (file):(line-number): (code-fragment)
-//! ```
-//!
-//! The code fragment and line number derive from a line of git/diff output that looks like
-//! ```
-//! @@ -119,12 +119,7 @@ fn write_to_output_buffer(
-//! ```
-//!
-//! Whether or not file and line-number are included is controlled by the presence of the special
-//! style attributes 'file' and 'line-number' in the hunk-header-style string. For example, delta
-//! might output the above hunk header as
-//! ```
-//! ───────────────────────────────────────────────────┐
-//! src/hunk_header.rs:119: fn write_to_output_buffer( │
-//! ───────────────────────────────────────────────────┘
-//! ```
+// A module for constructing and writing the hunk header.
+//
+// The structure of the hunk header output by delta is
+// ```
+// (file):(line-number): (code-fragment)
+// ```
+//
+// The code fragment and line number derive from a line of git/diff output that looks like
+// ```
+// @@ -119,12 +119,7 @@ fn write_to_output_buffer(
+// ```
+//
+// Whether or not file and line-number are included is controlled by the presence of the special
+// style attributes 'file' and 'line-number' in the hunk-header-style string. For example, delta
+// might output the above hunk header as
+// ```
+// ───────────────────────────────────────────────────┐
+// src/hunk_header.rs:119: fn write_to_output_buffer( │
+// ───────────────────────────────────────────────────┘
+// ```
 
 use std::fmt::Write as FmtWrite;
 
@@ -94,6 +94,11 @@ fn get_painted_file_with_line_number(
     config: &Config,
 ) -> String {
     let mut file_with_line_number = Vec::new();
+    let modified_label;
+    if config.navigate {
+        modified_label = format!("{} ", config.file_modified_label);
+        file_with_line_number.push(config.hunk_header_file_style.paint(&modified_label));
+    }
     let plus_line_number = line_numbers[line_numbers.len() - 1].0;
     if config.hunk_header_style_include_file_path {
         file_with_line_number.push(config.hunk_header_file_style.paint(plus_file))
