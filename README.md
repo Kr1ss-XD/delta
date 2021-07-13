@@ -201,68 +201,60 @@ In addition, delta handles traditional unified diff output.
 
 ## Installation
 
-You can download an executable for your system: [Linux](https://github.com/dandavison/delta/releases/download/0.8.1/delta-0.8.1-x86_64-unknown-linux-gnu.tar.gz) | [MacOS (recent versions)](https://github.com/dandavison/delta/releases/download/0.8.1/delta-0.8.1-x86_64-apple-darwin.tar.gz) | [Windows](https://github.com/dandavison/delta/releases/download/0.8.1/delta-0.8.1-x86_64-pc-windows-msvc.zip) | [All](https://github.com/dandavison/delta/releases)
+You can download an executable for your system:
+[Linux (glibc)](https://github.com/dandavison/delta/releases/download/0.8.3/delta-0.8.3-x86_64-unknown-linux-gnu.tar.gz)
+|
+[Linux (musl)](https://github.com/dandavison/delta/releases/download/0.8.3/delta-0.8.3-x86_64-unknown-linux-musl.tar.gz)
+|
+[MacOS](https://github.com/dandavison/delta/releases/download/0.8.3/delta-0.8.3-x86_64-apple-darwin.tar.gz)
+|
+[Windows](https://github.com/dandavison/delta/releases/download/0.8.3/delta-0.8.3-x86_64-pc-windows-msvc.zip)
+|
+[All](https://github.com/dandavison/delta/releases)
 
-Alternatively, delta is available in the following package managers:
+Alternatively you can install delta using a package manager: see [repology.org/git-delta](https://repology.org/project/git-delta/versions).
+
+Note that the package is often called `git-delta`, but the executable installed is called `delta`. Here is a quick sumary for selected package managers:
 
 <table>
   <tr>
-    <td>Arch Linux AUR<br>
-        (<a href="https://aur.archlinux.org/packages/git-delta">build from source</a>)</td>
-    <td><code>yay -S git-delta</code>
-        <br>or<br>
-        <code>git clone https://aur.archlinux.org/git-delta.git</code><br>
-        <code>cd git-delta</code><br>
-        <code>makepkg -csri</code></td>
+    <td><a href="https://archlinux.org/packages/community/x86_64/git-delta/">Arch Linux</a></td>
+    <td><code>pacman -S git-delta</code></td>
   </tr>
   <tr>
-    <td>Arch Linux AUR<br>
-        (<a href="https://aur.archlinux.org/packages/git-delta-bin">binary, no compilation required</a>)</td>
-    <td><code>yay -S git-delta-bin</code>
-        <br>or<br>
-        <code>git clone https://aur.archlinux.org/git-delta-bin.git</code><br>
-        <code>cd git-delta-bin</code><br>
-        <code>makepkg -si</code></td>
-  </tr>
-  <tr>
-    <td>Cargo</td>
+    <td><a href="https://crates.io/crates/git-delta">Cargo</a></td>
     <td><code>cargo install git-delta</code></td>
   </tr>
   <tr>
-    <td>Debian / Ubuntu</td>
-    <td><br>.deb files are on the <a href="https://github.com/dandavison/delta/releases">releases</a> page and at <a href="https://github.com/barnumbirr/delta-debian/releases">barnumbirr/delta-debian</a><br>
-    <code>dpkg -i file.deb</code>. **IMPORTANT** If you are using Ubuntu <= 19.10 or are mixing apt sources, read <a href="https://github.com/dandavison/delta/issues/504">https://github.com/dandavison/delta/issues/504</a>, be extremely cautious, and try the versions linked against musl.</td>
-  </tr>
-  <tr>
-    <td>Fedora</td>
+    <td><a href="https://src.fedoraproject.org/rpms/rust-git-delta">Fedora</a></td>
     <td><code>dnf install git-delta</code></td>
   </tr>
   <tr>
-    <td>FreeBSD</td>
+    <td><a href="https://pkgs.org/download/git-delta">FreeBSD</a></td>
     <td><code>pkg install git-delta</code></td>
   </tr>
   <tr>
-    <td>Gentoo</td>
+    <td><a href="https://packages.gentoo.org/packages/dev-util/git-delta">Gentoo</a></td>
     <td><code>emerge dev-util/git-delta</code></td>
   </tr>
   <tr>
-    <td>Homebrew</td>
+    <td><a href="https://formulae.brew.sh/formula/git-delta">Homebrew</a></td>
     <td><code>brew install git-delta</code></td>
   </tr>
   <tr>
-    <td>MacPorts</td>
+    <td><a href="https://ports.macports.org/port/git-delta/summary">MacPorts</a></td>
     <td><code>port install git-delta</code></td>
   </tr>
   <tr>
-    <td>Nix</td>
-    <td><code>nix-env -iA nixpkgs.gitAndTools.delta</code>
+    <td><a href="https://search.nixos.org/packages?show=delta&query=delta">Nix</a></td>
+    <td><code>nix-env -iA nixpkgs.delta</code>
   </tr>
   <tr>
-    <td>openSUSE Tumbleweed</td>
+    <td><a href="https://software.opensuse.org/package/git-delta">openSUSE Tumbleweed</a></td>
     <td><code>zypper install git-delta</code>
   </tr>
   <tr>
-    <td>Void Linux</td>
+    <td><a href="https://github.com/void-linux/void-packages/tree/master/srcpkgs/delta">Void Linux</a></td>
     <td><code>xbps-install -S delta</code>
   </tr>
   <tr>
@@ -273,11 +265,19 @@ Alternatively, delta is available in the following package managers:
     <td>Windows (<a href="https://scoop.sh/">Scoop</a>)</td>
     <td><code>scoop install delta</code></td>
   </tr>
+  <tr>
+    <td>Debian / Ubuntu</td>
+    <td>
+      <code>dpkg -i file.deb</code>
+      <br>
+      .deb files are on the <a href="https://github.com/dandavison/delta/releases">releases</a> page.
+      <br>
+      <sup><b>IMPORTANT</b>: If you are using Ubuntu <= 19.10 or are mixing apt sources, read <a href="https://github.com/dandavison/delta/issues/504">#504</a>, be extremely cautious, and try the versions linked against musl.</sup>
+    </td>
+  </tr>
 </table>
 
 Users of older MacOS versions (e.g. 10.11 El Capitan) should install using Homebrew, Cargo, or MacPorts: the binaries on the release page will not work.
-
-See [repology.org/git-delta](https://repology.org/project/git-delta/versions) for the current version in each package repository.
 
 Behind the scenes, delta uses [`less`](https://www.greenwoodsoftware.com/less/) for paging.
 It's important to have a reasonably recent version of less installed.
@@ -625,7 +625,7 @@ and use the executable found at `./target/release/delta`.
 ## Full --help output
 
 ```
-delta 0.8.1
+delta 0.8.3
 A viewer for git and diff output
 
 USAGE:
@@ -826,10 +826,12 @@ OPTIONS:
             Whether to examine ANSI color escape sequences in raw lines received from Git and handle lines colored in
             certain ways specially. This is on by default: it is how Delta supports Git's --color-moved feature. Set
             this to "false" to disable this behavior [default: true]
+        --pager <pager>
+            Which pager to use. The default pager is `less`. You can also change pager by setting the environment
+            variables DELTA_PAGER, BAT_PAGER, or PAGER (and that is their order of priority). This option overrides all
+            environment variables above
         --paging <paging-mode>
-            Whether to use a pager when displaying output. Options are: auto, always, and never. The default pager is
-            `less`: this can be altered by setting the environment variables DELTA_PAGER, BAT_PAGER, or PAGER (and that
-            is their order of priority) [default: auto]
+            Whether to use a pager when displaying output. Options are: auto, always, and never [default: auto]
         --minus-empty-line-marker-style <minus-empty-line-marker-style>
             Style for removed empty line marker (used only if --minus-style has no background color) [default: normal auto]
         --plus-empty-line-marker-style <plus-empty-line-marker-style>
